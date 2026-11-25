@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import textwrap
 from pathlib import Path
 
@@ -9,8 +10,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 from makebp.allowlist import MODULES
 
-FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+# DejaVu ships with ubuntu-latest (CI). Elsewhere, point MAKEBP_FONT_DIR at a
+# folder holding DejaVuSans.ttf and DejaVuSans-Bold.ttf.
+FONT_DIR = os.environ.get("MAKEBP_FONT_DIR", "/usr/share/fonts/truetype/dejavu")
+FONT = os.path.join(FONT_DIR, "DejaVuSans.ttf")
+FONT_BOLD = os.path.join(FONT_DIR, "DejaVuSans-Bold.ttf")
 
 APP_COLORS = {
     "google-email": "#EA4335",

@@ -1,1 +1,1149 @@
-
+{
+  "note": "Allowlist of Make module identifiers used by this library. See makebp/allowlist.py for the source of each id. Do not add a module id that has not been seen in a real export, Make's scenario-building examples, or the public blueprint corpus.",
+  "modules": {
+    "ai-local-agent:RunLocalAIAgent": {
+      "version": 1,
+      "app": "Make AI Agent",
+      "label": "Run an AI agent",
+      "kind": "action",
+      "connection": {
+        "parameter": "makeConnectionId",
+        "type": "account:ai-provider",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "gateway:CustomWebHook": {
+      "version": 1,
+      "app": "Webhooks",
+      "label": "Custom webhook",
+      "kind": "trigger",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "gateway:WebhookRespond": {
+      "version": 1,
+      "app": "Webhooks",
+      "label": "Webhook response",
+      "kind": "responder",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "google-drive:uploadAFile": {
+      "version": 4,
+      "app": "Google Drive",
+      "label": "Upload a file",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "google-email:TriggerNewEmail": {
+      "version": 1,
+      "app": "Gmail",
+      "label": "Watch emails",
+      "kind": "trigger",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google-restricted",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "google-sheets:addRow": {
+      "version": 2,
+      "app": "Google Sheets",
+      "label": "Add a row",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "google-sheets:updateRow": {
+      "version": 2,
+      "app": "Google Sheets",
+      "label": "Update a row",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "google-sheets:watchRows": {
+      "version": 2,
+      "app": "Google Sheets",
+      "label": "Watch new rows",
+      "kind": "trigger",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "hubspotcrm:createContact": {
+      "version": 2,
+      "app": "HubSpot CRM",
+      "label": "Create a contact",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:hubspotcrm",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "openai-gpt-3:CreateCompletion": {
+      "version": 1,
+      "app": "OpenAI",
+      "label": "Create a completion",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:openai-gpt-3",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "scenario-service:ReturnData": {
+      "version": 1,
+      "app": "Scenarios",
+      "label": "Return data",
+      "kind": "responder",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "scenario-service:StartSubscenario": {
+      "version": 1,
+      "app": "Scenarios",
+      "label": "Start a subscenario",
+      "kind": "trigger",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "slack:CreateMessage": {
+      "version": 4,
+      "app": "Slack",
+      "label": "Send a message",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:slack2,slack3",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "stripe:CreateCharge": {
+      "version": 1,
+      "app": "Stripe",
+      "label": "Create a charge",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:stripe",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "zendesk:UpdateTicket": {
+      "version": 1,
+      "app": "Zendesk",
+      "label": "Update a ticket",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:zendesk",
+        "label": "Connection"
+      },
+      "source": "integromat/make-skills"
+    },
+    "builtin:BasicAggregator": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Array aggregator",
+      "kind": "aggregator",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:BasicFeeder": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Iterator",
+      "kind": "iterator",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:BasicRepeater": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Repeater",
+      "kind": "iterator",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:BasicRouter": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Router",
+      "kind": "router",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:Break": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Retry (Break)",
+      "kind": "directive",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:Commit": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Commit",
+      "kind": "directive",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:Ignore": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Skip (Ignore)",
+      "kind": "directive",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:Resume": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Resume",
+      "kind": "directive",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:Rollback": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Rollback",
+      "kind": "directive",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:ThrowError": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Throw error",
+      "kind": "throw",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "builtin:ThrowWarning": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Throw warning",
+      "kind": "throw",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "util:AggregateAggregator": {
+      "version": 1,
+      "app": "Tools",
+      "label": "Table aggregator",
+      "kind": "aggregator",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "util:FunctionAggregator2": {
+      "version": 1,
+      "app": "Tools",
+      "label": "Numeric aggregator",
+      "kind": "aggregator",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "util:GetVariable2": {
+      "version": 1,
+      "app": "Tools",
+      "label": "Get a variable",
+      "kind": "transformer",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "util:SetVariable2": {
+      "version": 1,
+      "app": "Tools",
+      "label": "Set a variable",
+      "kind": "transformer",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "util:TextAggregator": {
+      "version": 1,
+      "app": "Tools",
+      "label": "Text aggregator",
+      "kind": "aggregator",
+      "connection": null,
+      "source": "integromat/make-skills"
+    },
+    "google-email:ActionSendEmail": {
+      "version": 2,
+      "app": "Gmail",
+      "label": "Send an email",
+      "kind": "action",
+      "connection": {
+        "parameter": "account",
+        "type": "account:google-restricted",
+        "label": "Connection"
+      },
+      "source": "import-tested public template (awesome-make-templates / live create)"
+    },
+    "google-email:ActionCreateDraft": {
+      "version": 2,
+      "app": "Gmail",
+      "label": "Create a draft",
+      "kind": "action",
+      "connection": {
+        "parameter": "account",
+        "type": "account:google-restricted",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-email:createADraft": {
+      "version": 1,
+      "app": "Gmail",
+      "label": "Create a draft",
+      "kind": "action",
+      "connection": {
+        "parameter": "account",
+        "type": "account:google-restricted",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-email:sendAnEmail": {
+      "version": 1,
+      "app": "Gmail",
+      "label": "Send an email",
+      "kind": "action",
+      "connection": {
+        "parameter": "account",
+        "type": "account:google-restricted",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-email:TriggerWatchEmails": {
+      "version": 1,
+      "app": "Gmail",
+      "label": "Watch emails",
+      "kind": "trigger",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google-restricted",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-email:triggerWatchNewEmails": {
+      "version": 1,
+      "app": "Gmail",
+      "label": "Watch emails",
+      "kind": "trigger",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google-restricted",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-sheets:filterRows": {
+      "version": 2,
+      "app": "Google Sheets",
+      "label": "Search rows",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public exported blueprint"
+    },
+    "google-sheets:searchRows": {
+      "version": 2,
+      "app": "Google Sheets",
+      "label": "Search rows",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-sheets:searchRowsAdvanced": {
+      "version": 2,
+      "app": "Google Sheets",
+      "label": "Search rows (advanced)",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-sheets:deleteRow": {
+      "version": 2,
+      "app": "Google Sheets",
+      "label": "Delete a row",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-sheets:createSpreadsheet": {
+      "version": 2,
+      "app": "Google Sheets",
+      "label": "Create a spreadsheet",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-sheets:getSheetContent": {
+      "version": 2,
+      "app": "Google Sheets",
+      "label": "Get sheet content",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-drive:getAFile": {
+      "version": 1,
+      "app": "Google Drive",
+      "label": "Get a file",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-drive:watchFilesInAFolder": {
+      "version": 1,
+      "app": "Google Drive",
+      "label": "Watch files in a folder",
+      "kind": "trigger",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-drive:createAFolder": {
+      "version": 1,
+      "app": "Google Drive",
+      "label": "Create a folder",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-drive:searchForFilesFolders": {
+      "version": 1,
+      "app": "Google Drive",
+      "label": "Search for files",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-docs:createADocument": {
+      "version": 1,
+      "app": "Google Docs",
+      "label": "Create a document",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-docs:getADocument": {
+      "version": 1,
+      "app": "Google Docs",
+      "label": "Get a document",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-calendar:createAnEvent": {
+      "version": 1,
+      "app": "Google Calendar",
+      "label": "Create an event",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-calendar:searchEvents": {
+      "version": 1,
+      "app": "Google Calendar",
+      "label": "Search events",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-calendar:deleteAnEvent": {
+      "version": 1,
+      "app": "Google Calendar",
+      "label": "Delete an event",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "google-forms:watchResponses": {
+      "version": 2,
+      "app": "Google Forms",
+      "label": "Watch responses",
+      "kind": "trigger",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:google",
+        "label": "Connection"
+      },
+      "source": "import-tested public template (awesome-make-templates / live create)"
+    },
+    "openai-gpt-3:transformTextToStructuredData": {
+      "version": 1,
+      "app": "OpenAI",
+      "label": "Transform text to structured data",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:openai-gpt-3",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "openai-gpt-3:askAnything": {
+      "version": 1,
+      "app": "OpenAI",
+      "label": "Ask anything",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:openai-gpt-3",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "openai-gpt-3:createModelResponse": {
+      "version": 1,
+      "app": "OpenAI",
+      "label": "Create a model response",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:openai-gpt-3",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "openai-gpt-3:GenerateImage": {
+      "version": 1,
+      "app": "OpenAI",
+      "label": "Generate an image",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:openai-gpt-3",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "openai-gpt-3:messageAssistantAdvanced": {
+      "version": 1,
+      "app": "OpenAI",
+      "label": "Message an assistant",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:openai-gpt-3",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "anthropic-claude:createAMessage": {
+      "version": 1,
+      "app": "Anthropic Claude",
+      "label": "Create a message",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:anthropic-claude",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "anthropic-claude:simpleTextPrompt": {
+      "version": 1,
+      "app": "Anthropic Claude",
+      "label": "Simple text prompt",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:anthropic-claude",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "gemini-ai:createACompletionGeminiPro": {
+      "version": 1,
+      "app": "Gemini",
+      "label": "Create a completion",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:gemini-ai",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "perplexity-ai:createAChatCompletion": {
+      "version": 1,
+      "app": "Perplexity",
+      "label": "Create a chat completion",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:perplexity-ai",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "slack:InviteUsers": {
+      "version": 1,
+      "app": "Slack",
+      "label": "Invite users",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:slack2,slack3",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "notion:createAPage": {
+      "version": 1,
+      "app": "Notion",
+      "label": "Create a page",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:notion2,notion3",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "notion:createDataSourceItem": {
+      "version": 1,
+      "app": "Notion",
+      "label": "Create a data source item",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:notion2,notion3",
+        "label": "Connection"
+      },
+      "source": "import-tested public template (awesome-make-templates / live create)"
+    },
+    "notion:updateADatabaseItem": {
+      "version": 1,
+      "app": "Notion",
+      "label": "Update a database item",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:notion2,notion3",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "airtable:ActionCreateRecord": {
+      "version": 1,
+      "app": "Airtable",
+      "label": "Create a record",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:airtable",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "airtable:ActionGetRecord": {
+      "version": 1,
+      "app": "Airtable",
+      "label": "Get a record",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:airtable",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "airtable:ActionSearchRecords": {
+      "version": 1,
+      "app": "Airtable",
+      "label": "Search records",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:airtable",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "airtable:ActionUpdateRecords": {
+      "version": 1,
+      "app": "Airtable",
+      "label": "Update records",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:airtable",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "airtable:TriggerWatchRecords": {
+      "version": 1,
+      "app": "Airtable",
+      "label": "Watch records",
+      "kind": "trigger",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:airtable",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "twilio:SendSMS": {
+      "version": 1,
+      "app": "Twilio",
+      "label": "Send an SMS",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:twilio",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "http:ActionSendData": {
+      "version": 3,
+      "app": "HTTP",
+      "label": "Make a request",
+      "kind": "action",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "http:ActionSendDataAPIKeyAuth": {
+      "version": 3,
+      "app": "HTTP",
+      "label": "Make a request (API key)",
+      "kind": "action",
+      "connection": {
+        "parameter": "auth",
+        "type": "keychain:apikeyauth",
+        "label": "Connection"
+      },
+      "source": "public exported blueprint"
+    },
+    "http:ActionSendDataBasicAuth": {
+      "version": 3,
+      "app": "HTTP",
+      "label": "Make a request (basic auth)",
+      "kind": "action",
+      "connection": {
+        "parameter": "auth",
+        "type": "keychain:basicauth",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "http:ActionGetFile": {
+      "version": 3,
+      "app": "HTTP",
+      "label": "Get a file",
+      "kind": "action",
+      "connection": null,
+      "source": "public exported blueprint"
+    },
+    "http:MakeRequest": {
+      "version": 3,
+      "app": "HTTP",
+      "label": "Make a request",
+      "kind": "action",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "http:DownloadFile": {
+      "version": 3,
+      "app": "HTTP",
+      "label": "Download a file",
+      "kind": "action",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "json:ParseJSON": {
+      "version": 1,
+      "app": "JSON",
+      "label": "Parse JSON",
+      "kind": "transformer",
+      "connection": null,
+      "source": "Make API blueprint example (developers.make.com)"
+    },
+    "json:CreateJSON": {
+      "version": 1,
+      "app": "JSON",
+      "label": "Create JSON",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "json:TransformToJSON": {
+      "version": 1,
+      "app": "JSON",
+      "label": "Transform to JSON",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "json:AggregateToJSON": {
+      "version": 1,
+      "app": "JSON",
+      "label": "Aggregate to JSON",
+      "kind": "aggregator",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "regexp:HTMLToText": {
+      "version": 1,
+      "app": "Text parser",
+      "label": "HTML to text",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "regexp:Replace": {
+      "version": 1,
+      "app": "Text parser",
+      "label": "Replace",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "regexp:Parser": {
+      "version": 1,
+      "app": "Text parser",
+      "label": "Match pattern",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "csv:ParseCSV": {
+      "version": 1,
+      "app": "CSV",
+      "label": "Parse CSV",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "rss:TriggerNewArticle": {
+      "version": 1,
+      "app": "RSS",
+      "label": "Watch RSS feed items",
+      "kind": "trigger",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "rss:ActionReadArticles": {
+      "version": 1,
+      "app": "RSS",
+      "label": "Retrieve RSS feed items",
+      "kind": "action",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "util:SetVariables": {
+      "version": 1,
+      "app": "Tools",
+      "label": "Set multiple variables",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public exported blueprint"
+    },
+    "util:SetMultipleVariables": {
+      "version": 1,
+      "app": "Tools",
+      "label": "Set multiple variables",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "util:FunctionSleep": {
+      "version": 1,
+      "app": "Tools",
+      "label": "Sleep",
+      "kind": "action",
+      "connection": null,
+      "source": "public exported blueprint"
+    },
+    "util:Sleep": {
+      "version": 1,
+      "app": "Tools",
+      "label": "Sleep",
+      "kind": "action",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "linkedin:CreatePost": {
+      "version": 1,
+      "app": "LinkedIn",
+      "label": "Create a post",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:linkedin",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "linkedin:CreateCompanyPost": {
+      "version": 1,
+      "app": "LinkedIn",
+      "label": "Create a company post",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:linkedin",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "facebook-pages:CreatePost": {
+      "version": 1,
+      "app": "Facebook Pages",
+      "label": "Create a post",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:facebook-pages",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "twitter:createATweet": {
+      "version": 1,
+      "app": "X (Twitter)",
+      "label": "Create a tweet",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:twitter",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "instagram-business:CreatePostPhoto": {
+      "version": 1,
+      "app": "Instagram",
+      "label": "Create a photo post",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:instagram-business",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "typeform:WatchEventsWithResponses": {
+      "version": 1,
+      "app": "Typeform",
+      "label": "Watch responses",
+      "kind": "trigger",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:typeform",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "typeform:ListResponses": {
+      "version": 1,
+      "app": "Typeform",
+      "label": "List responses",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:typeform",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "apify:runActor": {
+      "version": 1,
+      "app": "Apify",
+      "label": "Run an actor",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:apify",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "apify:fetchDatasetItems": {
+      "version": 1,
+      "app": "Apify",
+      "label": "Fetch dataset items",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:apify",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "email:ActionSendEmail": {
+      "version": 1,
+      "app": "Email",
+      "label": "Send an email",
+      "kind": "action",
+      "connection": {
+        "parameter": "account",
+        "type": "account:email",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "email:TriggerNewEmail": {
+      "version": 1,
+      "app": "Email",
+      "label": "Watch emails",
+      "kind": "trigger",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:email",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "discord:createMessage": {
+      "version": 1,
+      "app": "Discord",
+      "label": "Send a message",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:discord",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "telegram:SendReplyMessage": {
+      "version": 1,
+      "app": "Telegram",
+      "label": "Send a message",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:telegram",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "dropbox:uploadLargeFile": {
+      "version": 1,
+      "app": "Dropbox",
+      "label": "Upload a file",
+      "kind": "action",
+      "connection": {
+        "parameter": "__IMTCONN__",
+        "type": "account:dropbox",
+        "label": "Connection"
+      },
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "markdown:Compile": {
+      "version": 1,
+      "app": "Markdown",
+      "label": "Markdown to HTML",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "code:ExecuteCode": {
+      "version": 1,
+      "app": "Code",
+      "label": "Execute code",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    },
+    "placeholder:Placeholder": {
+      "version": 1,
+      "app": "Flow control",
+      "label": "Placeholder",
+      "kind": "transformer",
+      "connection": null,
+      "source": "public Make blueprint corpus (migrate-to-n8n module map, 1432 exports)"
+    }
+  }
+}
