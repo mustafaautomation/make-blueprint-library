@@ -1,0 +1,191 @@
+{
+  "name": "Reschedule webhook logged and acknowledged",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the webhook"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://example.com",
+        "serializeUrl": false,
+        "method": "get",
+        "headers": [
+          {
+            "name": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "contentType": "application/json",
+        "data": "",
+        "timeout": "",
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "followAllRedirects": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Placeholder fetch"
+        }
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "API call failed.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert API"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.email}}",
+          "2": "{{1.old_start}}",
+          "3": "{{1.new_start}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Log the call"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "mapper": {
+        "channelWType": "list",
+        "channelType": "public",
+        "channel": "",
+        "text": "Rescheduled {{1.email}}: {{1.old_start}} -> {{1.new_start}}.",
+        "mrkdwn": true,
+        "parse": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Tell Slack"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:slack2,slack3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

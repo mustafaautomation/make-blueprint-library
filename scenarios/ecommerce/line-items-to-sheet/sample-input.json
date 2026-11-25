@@ -1,0 +1,15 @@
+{
+  "order_number": "1001",
+  "lines": [
+    {
+      "sku": "MUG",
+      "qty": 2,
+      "name": "Sand mug"
+    },
+    {
+      "sku": "SAUCER",
+      "qty": 2,
+      "name": "Sand saucer"
+    }
+  ]
+}

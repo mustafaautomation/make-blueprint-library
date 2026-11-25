@@ -1,0 +1,12 @@
+flowchart LR
+  call(("1 · Catch the call event"))
+  sms(("2 · Text the caller back"))
+  call --> sms
+  sms -->|"error"| sms_alert
+  sms_alert(("3 · Alert text-back"))
+  sms_directive(("4 · Retry (Break)"))
+  sms_alert --> sms_directive
+  log(("5 · Log the miss"))
+  sms --> log
+  ping(("6 · Show it in Slack"))
+  log --> ping

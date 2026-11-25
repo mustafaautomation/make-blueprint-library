@@ -1,0 +1,34 @@
+flowchart LR
+  ask(("1 · Catch the question"))
+  choice(("2 · Choose a tool"))
+  ask --> choice
+  choice -->|"error"| choice_alert
+  choice_alert(("3 · Alert router"))
+  choice_directive(("4 · Retry (Break)"))
+  choice_alert --> choice_directive
+  parsed(("5 · Parse the tool choice"))
+  choice --> parsed
+  tools{"6 · Run the chosen tool and answer"}
+  parsed --> tools
+  found(("7 · Find the policy row"))
+  sheets_answer(("8 · Answer from the rows"))
+  found --> sheets_answer
+  sheets_out(("9 · Return the sheets answer"))
+  sheets_answer --> sheets_out
+  tools -->|"Sheets"| found
+  page(("10 · Fetch the status page"))
+  page -->|"error"| page_alert
+  page_alert(("11 · Alert fetch"))
+  page_directive(("12 · Skip (Ignore)"))
+  page_alert --> page_directive
+  http_answer(("13 · Answer from the page"))
+  page --> http_answer
+  http_out(("14 · Return the HTTP answer"))
+  http_answer --> http_out
+  tools -->|"HTTP"| page
+  note(("15 · Post the note"))
+  slack_answer(("16 · Confirm what was posted"))
+  note --> slack_answer
+  slack_out(("17 · Return the confirmation"))
+  slack_answer --> slack_out
+  tools -->|"Slack"| note

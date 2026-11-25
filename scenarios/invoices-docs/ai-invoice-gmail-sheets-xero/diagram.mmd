@@ -1,0 +1,30 @@
+flowchart LR
+  mail(("1 · Watch the invoices label"))
+  extract(("2 · Extract the invoice fields"))
+  mail --> extract
+  extract -->|"error"| extract_alert
+  extract_alert(("3 · Tell the channel"))
+  extract_directive(("4 · Retry (Break)"))
+  extract_alert --> extract_directive
+  parsed(("5 · Parse the JSON"))
+  extract --> parsed
+  choice(("6 · Choose Xero or QuickBooks"))
+  parsed --> choice
+  log(("7 · Log every invoice"))
+  choice --> log
+  books{"8 · Route the confident bills"}
+  log --> books
+  xero(("9 · Create the Xero bill"))
+  xero -->|"error"| xero_alert
+  xero_alert(("10 · Tell the channel"))
+  xero_directive(("11 · Retry (Break)"))
+  xero_alert --> xero_directive
+  books -->|"Xero"| xero
+  qbo(("12 · Create the QuickBooks bill"))
+  qbo -->|"error"| qbo_alert
+  qbo_alert(("13 · Tell the channel"))
+  qbo_directive(("14 · Retry (Break)"))
+  qbo_alert --> qbo_directive
+  books -->|"QuickBooks"| qbo
+  review(("15 · Ask a human to review"))
+  books -->|"Review"| review

@@ -1,0 +1,14 @@
+flowchart LR
+  mail(("1 · Watch the finance label"))
+  model(("2 · Classify the document"))
+  mail --> model
+  model -->|"error"| model_alert
+  model_alert(("3 · Alert the model failure"))
+  model_directive(("4 · Retry (Break)"))
+  model_alert --> model_directive
+  parsed(("5 · Parse the JSON"))
+  model --> parsed
+  log(("6 · Log the row"))
+  parsed --> log
+  ping(("7 · Post the result"))
+  log --> ping

@@ -1,0 +1,399 @@
+{
+  "name": "Support ticket classification and routing",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the Zendesk webhook"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "250",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You classify support tickets. Return JSON only: priority (urgent or normal), summary (one sentence). Do not invent refunds."
+          },
+          {
+            "role": "user",
+            "content": "Ticket {{1.id}}: {{1.subject}}\nFrom {{1.requester}}\n{{1.latest_comment}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Classify priority"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Ticket {{1.id}} was not classified.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert classify"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{2.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Parse priority"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.id}}",
+          "2": "{{1.requester}}",
+          "3": "{{5.priority}}",
+          "4": "{{5.summary}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Log the decision"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "Update Zendesk, page Slack if urgent"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 8,
+              "module": "zendesk:UpdateTicket",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "ticketId": "{{1.id}}",
+                "status": "open",
+                "comment": "Triage: urgent. {{5.summary}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 0,
+                  "name": "Mark the ticket urgent"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:zendesk",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Urgent",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.priority}}",
+                      "o": "text:equal",
+                      "b": "urgent"
+                    }
+                  ]
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 9,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "Urgent update failed for ticket {{1.id}}.",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1500,
+                      "y": 300,
+                      "name": "Alert Zendesk"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 10,
+                  "module": "builtin:Break",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {
+                    "retry": true,
+                    "count": 3,
+                    "interval": 15
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1800,
+                      "y": 300,
+                      "name": "Retry (Break)"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": 11,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "*Urgent ticket* {{1.id}} from {{1.requester}}: {{5.summary}}",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 0,
+                  "name": "Page the urgent channel"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 12,
+              "module": "zendesk:UpdateTicket",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "ticketId": "{{1.id}}",
+                "status": "open",
+                "comment": "Triage: normal. {{5.summary}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 300,
+                  "name": "Comment on the normal ticket"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:zendesk",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Normal",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.priority}}",
+                      "o": "text:equal",
+                      "b": "normal"
+                    }
+                  ]
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 13,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "Normal update failed for ticket {{1.id}}.",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1500,
+                      "y": 600,
+                      "name": "Alert Zendesk"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 14,
+                  "module": "builtin:Ignore",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {},
+                  "metadata": {
+                    "designer": {
+                      "x": 1800,
+                      "y": 600,
+                      "name": "Skip (Ignore)"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

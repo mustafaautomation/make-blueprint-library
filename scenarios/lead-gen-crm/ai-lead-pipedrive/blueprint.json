@@ -1,0 +1,479 @@
+{
+  "name": "AI lead score into a Pipedrive person and deal",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the lead"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "250",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You qualify leads for a Pipedrive pipeline. Return JSON only: score (0-100), title (a six-word deal title), reason."
+          },
+          {
+            "role": "user",
+            "content": "{{1.name}} <{{1.email}}> at {{1.org}}\n{{1.message}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Score the evaluation"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Pipedrive scoring failed for {{1.email}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert scoring"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{2.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Parse the score"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://api.pipedrive.com/v1/persons",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Accept",
+            "value": "application/json"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [
+          {
+            "name": "api_token",
+            "value": "YOUR_API_KEY"
+          }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "contentType": "application/json",
+        "data": "{\"name\":\"{{1.name}}\",\"email\":[\"{{1.email}}\"],\"org_name\":\"{{1.org}}\"}",
+        "timeout": "",
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "followAllRedirects": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Create the Pipedrive person"
+        }
+      },
+      "onerror": [
+        {
+          "id": 7,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Person create failed for {{1.email}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 900,
+              "y": 300,
+              "name": "Alert Pipedrive"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 8,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 1200,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.email}}",
+          "2": "{{1.org}}",
+          "3": "{{5.score}}",
+          "4": "{{6.data.data.id}}",
+          "5": "person-only"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "Log the person"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0,
+          "name": "Open a deal only when it is real"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 11,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true
+              },
+              "mapper": {
+                "url": "https://api.pipedrive.com/v1/deals",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "qs": [
+                  {
+                    "name": "api_token",
+                    "value": "YOUR_API_KEY"
+                  }
+                ],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"title\":\"{{5.title}}\",\"person_id\":\"{{6.data.data.id}}\"}",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false,
+                "followAllRedirects": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 0,
+                  "name": "Create the deal"
+                }
+              },
+              "filter": {
+                "name": "Score at least 65",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.score}}",
+                      "o": "number:greaterorequal",
+                      "b": "65"
+                    }
+                  ]
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 12,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "Deal create failed for {{1.email}}.",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1800,
+                      "y": 300,
+                      "name": "Alert deal"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 13,
+                  "module": "builtin:Break",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {
+                    "retry": true,
+                    "count": 3,
+                    "interval": 15
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 2100,
+                      "y": 300,
+                      "name": "Retry (Break)"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": 14,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "*Deal opened* {{5.title}} for {{1.org}} — {{5.score}}. {{5.reason}}",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 2100,
+                  "y": 0,
+                  "name": "Tell the pipeline channel"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 15,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "Person only for {{1.email}} at {{5.score}}. No deal.",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 300,
+                  "name": "Note that no deal was opened"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Under 65",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.score}}",
+                      "o": "number:less",
+                      "b": "65"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

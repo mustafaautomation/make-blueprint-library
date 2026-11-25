@@ -1,0 +1,5 @@
+{
+  "from": "ap@example.com",
+  "subject": "Invoice 1900",
+  "text": "Northwind Supply invoice 1900. Total USD 6400. Due 2026-12-20."
+}

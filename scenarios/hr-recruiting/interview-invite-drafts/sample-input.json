@@ -1,0 +1,3 @@
+{
+  "note": "Reads the sheet. Rows whose filter column matches are each processed."
+}

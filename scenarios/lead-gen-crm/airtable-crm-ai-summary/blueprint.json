@@ -1,0 +1,249 @@
+{
+  "name": "Airtable CRM record summary",
+  "flow": [
+    {
+      "id": 1,
+      "module": "airtable:TriggerWatchRecords",
+      "version": 1,
+      "parameters": {
+        "baseId": "",
+        "tableId": ""
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Watch CRM records"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:airtable",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "280",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Summarize CRM notes in three sentences for the next person on the account. Do not add facts that are not in the notes."
+          },
+          {
+            "role": "user",
+            "content": "Account: {{1.fields.Name}}\nStage: {{1.fields.Stage}}\n\n{{1.fields.Notes}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Summarize the notes"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Summary failed for {{1.fields.Name}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert Airtable"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "airtable:ActionUpdateRecords",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "baseId": "",
+        "tableId": "",
+        "fields": {
+          "AI summary": "{{2.result}}"
+        },
+        "recordId": "{{1.id}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Write the AI summary"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:airtable",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 6,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Could not write the summary on {{1.fields.Name}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Alert Airtable"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 7,
+          "module": "builtin:Ignore",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 900,
+              "y": 300,
+              "name": "Skip (Ignore)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "mapper": {
+        "channelWType": "list",
+        "channelType": "public",
+        "channel": "",
+        "text": "*Won* {{1.fields.Name}}\n{{2.result}}",
+        "mrkdwn": true,
+        "parse": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Ping when the stage is Won"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:slack2,slack3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "filter": {
+        "name": "Stage is Won",
+        "conditions": [
+          [
+            {
+              "a": "{{1.fields.Stage}}",
+              "o": "text:equal",
+              "b": "Won"
+            }
+          ]
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

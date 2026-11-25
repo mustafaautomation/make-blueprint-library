@@ -1,0 +1,24 @@
+flowchart LR
+  lead(("1 · Catch the form webhook"))
+  score(("2 · Score the lead"))
+  lead --> score
+  score -->|"error"| score_alert
+  score_alert(("3 · Tell the channel"))
+  score_directive(("4 · Retry (Break)"))
+  score_alert --> score_directive
+  parsed(("5 · Parse score JSON"))
+  score --> parsed
+  log(("6 · Log the lead and the score"))
+  parsed --> log
+  band{"7 · Branch on the score"}
+  log --> band
+  contact(("8 · Create the HubSpot contact"))
+  contact -->|"error"| contact_alert
+  contact_alert(("9 · Tell the channel"))
+  contact_directive(("10 · Retry (Break)"))
+  contact_alert --> contact_directive
+  ping(("11 · Ping sales"))
+  contact --> ping
+  band -->|"Hot"| contact
+  draft(("12 · Draft the first touch"))
+  band -->|"Nurture"| draft

@@ -1,0 +1,129 @@
+{
+  "name": "Policy agent over a webhook",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the question"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "ai-local-agent:RunLocalAIAgent",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "systemPrompt": "You answer only two topics: refunds are allowed within 14 days of delivery, and shipping goes to the address on the order. If the question is anything else, say you do not know and that a person should answer. Do not invent exceptions.",
+        "message": "{{1.message}}",
+        "threadId": "{{1.thread}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Run the agent"
+        },
+        "parameters": [
+          {
+            "name": "makeConnectionId",
+            "type": "account:ai-provider",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Agent failed.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert agent"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "gateway:WebhookRespond",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "status": 200,
+        "body": "{{2.response}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Return the agent text"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

@@ -1,0 +1,26 @@
+flowchart LR
+  lead(("1 · Catch the lead webhook"))
+  score(("2 · Score urgency"))
+  lead --> score
+  score -->|"error"| score_alert
+  score_alert(("3 · Alert scoring failure"))
+  score_directive(("4 · Retry (Break)"))
+  score_alert --> score_directive
+  parsed(("5 · Parse the score"))
+  score --> parsed
+  ghl(("6 · Create the GoHighLevel contact"))
+  parsed --> ghl
+  ghl -->|"error"| ghl_alert
+  ghl_alert(("7 · Alert GHL failure"))
+  ghl_directive(("8 · Retry (Break)"))
+  ghl_alert --> ghl_directive
+  log(("9 · Log the lead"))
+  ghl --> log
+  text{"10 · Text only the hot ones"}
+  log --> text
+  sms(("11 · Text the lead"))
+  ping(("12 · Tell the owner"))
+  sms --> ping
+  text -->|"Text the lead"| sms
+  quiet(("13 · Log the quiet lead"))
+  text -->|"Quiet log"| quiet

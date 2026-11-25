@@ -1,0 +1,208 @@
+{
+  "name": "Ad spend rows with a plain-language note",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-sheets:filterRows",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "tableFirstRow": "A1:Z1",
+        "valueRenderOption": "FORMATTED_VALUE",
+        "dateTimeRenderOption": "FORMATTED_STRING",
+        "limit": 25,
+        "filter": [
+          [
+            {
+              "a": "D",
+              "o": "text:equal",
+              "b": "YES"
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Read the included rows"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:TextAggregator",
+      "version": 1,
+      "parameters": {
+        "feeder": 1,
+        "rowSeparator": "\n"
+      },
+      "mapper": {
+        "value": "{{1.`0`}}: this week {{1.`1`}}, last week {{1.`2`}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Join the rows"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "450",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Describe these ad lines in four sentences. You may say a channel is up or down only by comparing the two figures on that line. No advice."
+          },
+          {
+            "role": "user",
+            "content": "{{2.text}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Write the note"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 4,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Narrative failed.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Alert narrative"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 5,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 900,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "mapper": {
+        "channelWType": "list",
+        "channelType": "public",
+        "channel": "",
+        "text": "*Ad spend*\n{{3.result}}",
+        "mrkdwn": true,
+        "parse": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Post the narrative"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:slack2,slack3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "filter": {
+        "name": "Digest exists",
+        "conditions": [
+          [
+            {
+              "a": "{{2.text}}",
+              "o": "exist"
+            }
+          ]
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

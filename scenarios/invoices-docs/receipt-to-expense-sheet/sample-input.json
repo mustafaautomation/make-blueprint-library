@@ -1,0 +1,5 @@
+{
+  "from": "person@example.com",
+  "subject": "Your receipt from Fieldnote Coffee",
+  "text": "Fieldnote Coffee\n2026-11-20\nTotal USD 240.00\nCard ending 4242"
+}

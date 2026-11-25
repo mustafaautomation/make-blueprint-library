@@ -1,0 +1,510 @@
+{
+  "name": "AI invoice extraction from Gmail to Sheets, Xero, or QuickBooks",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-email:TriggerWatchEmails",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "q": "label:invoices newer_than:14d",
+        "maxResults": 5
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Watch the invoices label"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google-restricted",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "500",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a careful accounts-payable clerk."
+          },
+          {
+            "role": "user",
+            "content": "You extract supplier invoices. Return one JSON object and no other text. Keys: vendor (string), invoice_number (string), currency (ISO code), total (number), due_date (YYYY-MM-DD or empty), confidence (number from 0 to 1). Use only facts in the email. If a field is missing, use an empty string, 0 for total, and confidence below 0.5. Never invent a vendor.\n\nEmail:\n{{1.text}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Extract the invoice fields"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Invoice extraction failed for {{1.subject}}. The run will retry.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Tell the channel"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{2.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Parse the JSON"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "books",
+        "scope": "roundtrip",
+        "value": "xero"
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Choose Xero or QuickBooks"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.from}}",
+          "2": "{{5.vendor}}",
+          "3": "{{5.invoice_number}}",
+          "4": "{{5.currency}}",
+          "5": "{{5.total}}",
+          "6": "{{5.due_date}}",
+          "7": "{{5.confidence}}",
+          "8": "logged"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "Log every invoice"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0,
+          "name": "Route the confident bills"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 9,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true
+              },
+              "mapper": {
+                "url": "https://api.xero.com/api.xro/2.0/Invoices",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer YOUR_API_KEY"
+                  },
+                  {
+                    "name": "xero-tenant-id",
+                    "value": "YOUR_XERO_TENANT_ID"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"Type\":\"ACCPAY\",\"Contact\":{\"Name\":\"{{5.vendor}}\"},\"InvoiceNumber\":\"{{5.invoice_number}}\",\"DueDate\":\"{{5.due_date}}\",\"CurrencyCode\":\"{{5.currency}}\",\"LineItems\":[{\"Description\":\"Imported from Gmail\",\"Quantity\":1,\"UnitAmount\":\"{{5.total}}\"}]}",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false,
+                "followAllRedirects": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 0,
+                  "name": "Create the Xero bill"
+                }
+              },
+              "filter": {
+                "name": "Confident and Xero",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.confidence}}",
+                      "o": "number:greaterorequal",
+                      "b": "0.8"
+                    },
+                    {
+                      "a": "{{6.books}}",
+                      "o": "text:equal",
+                      "b": "xero"
+                    }
+                  ]
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 10,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "Xero bill failed for {{5.invoice_number}} ({{5.vendor}}).",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1800,
+                      "y": 300,
+                      "name": "Tell the channel"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 11,
+                  "module": "builtin:Break",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {
+                    "retry": true,
+                    "count": 3,
+                    "interval": 15
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 2100,
+                      "y": 300,
+                      "name": "Retry (Break)"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 12,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true
+              },
+              "mapper": {
+                "url": "https://quickbooks.api.intuit.com/v3/company/YOUR_COMPANY_ID/bill",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "Authorization",
+                    "value": "Bearer YOUR_API_KEY"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"VendorRef\":{\"name\":\"{{5.vendor}}\"},\"DocNumber\":\"{{5.invoice_number}}\",\"CurrencyRef\":{\"value\":\"{{5.currency}}\"},\"Line\":[{\"DetailType\":\"AccountBasedExpenseLineDetail\",\"Amount\":\"{{5.total}}\",\"Description\":\"Imported from Gmail\"}]}",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false,
+                "followAllRedirects": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 300,
+                  "name": "Create the QuickBooks bill"
+                }
+              },
+              "filter": {
+                "name": "Confident and QuickBooks",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.confidence}}",
+                      "o": "number:greaterorequal",
+                      "b": "0.8"
+                    },
+                    {
+                      "a": "{{6.books}}",
+                      "o": "text:equal",
+                      "b": "quickbooks"
+                    }
+                  ]
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 13,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "QuickBooks bill failed for {{5.invoice_number}}.",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1800,
+                      "y": 600,
+                      "name": "Tell the channel"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 14,
+                  "module": "builtin:Break",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {
+                    "retry": true,
+                    "count": 3,
+                    "interval": 15
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 2100,
+                      "y": 600,
+                      "name": "Retry (Break)"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 15,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "*Invoice needs review* — {{5.vendor}} {{5.invoice_number}} {{5.currency}} {{5.total}} (confidence {{5.confidence}}). Subject: {{1.subject}}",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 600,
+                  "name": "Ask a human to review"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Low confidence",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.confidence}}",
+                      "o": "number:less",
+                      "b": "0.8"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

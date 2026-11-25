@@ -1,0 +1,381 @@
+{
+  "name": "Slack shortcut to a Notion page and a ClickUp task",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the Slack shortcut"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "400",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Turn a Slack request into a task. Return JSON only: title (under 80 characters), body (three short lines), due (YYYY-MM-DD or empty). Do not invent a deadline."
+          },
+          {
+            "role": "user",
+            "content": "{{1.user}} wrote: {{1.text}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Turn the ramble into a task"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Could not parse a Slack request from {{1.user}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert task"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{2.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Parse the task"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Create the page and the task"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 7,
+              "module": "notion:createAPage",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "select": "page",
+                "title": "{{5.title}}",
+                "content": "{{5.body}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 0,
+                  "name": "Create the Notion page"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:notion2,notion3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 8,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "Notion page failed: {{5.title}}",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1200,
+                      "y": 300,
+                      "name": "Alert Notion"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 9,
+                  "module": "builtin:Ignore",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {},
+                  "metadata": {
+                    "designer": {
+                      "x": 1500,
+                      "y": 300,
+                      "name": "Skip (Ignore)"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": 10,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "Notion page created: {{5.title}}",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 0,
+                  "name": "Confirm the Notion page"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 11,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true
+              },
+              "mapper": {
+                "url": "https://api.clickup.com/api/v2/list/YOUR_LIST_ID/task",
+                "serializeUrl": false,
+                "method": "post",
+                "headers": [
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "Authorization",
+                    "value": "YOUR_API_KEY"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "{\"name\":\"{{5.title}}\",\"description\":\"{{5.body}}\\nDue: {{5.due}}\\nFrom: {{1.user}}\"}",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false,
+                "followAllRedirects": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 300,
+                  "name": "Create the ClickUp task"
+                }
+              },
+              "onerror": [
+                {
+                  "id": 12,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "ClickUp task failed: {{5.title}}",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1200,
+                      "y": 600,
+                      "name": "Alert ClickUp"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 13,
+                  "module": "builtin:Ignore",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {},
+                  "metadata": {
+                    "designer": {
+                      "x": 1500,
+                      "y": 600,
+                      "name": "Skip (Ignore)"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": 14,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "ClickUp task created: {{5.title}}",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 300,
+                  "name": "Confirm the ClickUp task"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

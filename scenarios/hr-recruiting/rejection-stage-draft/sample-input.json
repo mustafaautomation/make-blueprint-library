@@ -1,0 +1,5 @@
+{
+  "from": "hiring@example.com",
+  "subject": "Application update",
+  "text": "Please send the candidate a closing note. Do not include feedback."
+}

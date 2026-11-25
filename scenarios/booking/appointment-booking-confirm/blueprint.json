@@ -1,0 +1,273 @@
+{
+  "name": "Calendly or Cal.com booking confirmation",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the booking webhook"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.event}}",
+          "2": "{{1.name}}",
+          "3": "{{1.email}}",
+          "4": "{{1.start}}",
+          "5": "{{1.event_type}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Log the booking event"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Confirm or cancel"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 4,
+              "module": "google-email:ActionSendEmail",
+              "version": 2,
+              "parameters": {},
+              "mapper": {
+                "from": "",
+                "to": [
+                  "{{1.email}}"
+                ],
+                "cc": [],
+                "bcc": [],
+                "replyTo": "",
+                "subject": "Confirmed: {{1.event_type}}",
+                "html": "<p>Hi {{1.name}},</p><p>You are booked for {{1.event_type}} at {{1.start}}.</p>",
+                "attachments": []
+              },
+              "metadata": {
+                "designer": {
+                  "x": 900,
+                  "y": 0,
+                  "name": "Email the confirmation"
+                },
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "account:google-restricted",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Created",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.event}}",
+                      "o": "text:equal",
+                      "b": "invitee.created"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 5,
+              "module": "twilio:SendSMS",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "to": "{{1.phone}}",
+                "from": "YOUR_TWILIO_NUMBER",
+                "message": "Confirmed: {{1.event_type}} at {{1.start}}."
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 0,
+                  "name": "Text the confirmation"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:twilio",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            },
+            {
+              "id": 6,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "*Booked* {{1.name}} — {{1.event_type}} at {{1.start}}. Host {{1.host}}.",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 0,
+                  "name": "Tell the host channel"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 7,
+              "module": "google-email:ActionSendEmail",
+              "version": 2,
+              "parameters": {},
+              "mapper": {
+                "from": "",
+                "to": [
+                  "{{1.email}}"
+                ],
+                "cc": [],
+                "bcc": [],
+                "replyTo": "",
+                "subject": "Canceled: {{1.event_type}}",
+                "html": "<p>Hi {{1.name}},</p><p>Your {{1.event_type}} at {{1.start}} is canceled.</p>",
+                "attachments": []
+              },
+              "metadata": {
+                "designer": {
+                  "x": 900,
+                  "y": 300,
+                  "name": "Email the cancellation"
+                },
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "account:google-restricted",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Canceled",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.event}}",
+                      "o": "text:equal",
+                      "b": "invitee.canceled"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 8,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "*Canceled* {{1.name}} — {{1.event_type}} at {{1.start}}.",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 300,
+                  "name": "Tell the host it was canceled"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": 501,
+  "number": "501",
+  "status": "processing",
+  "total": "42.00",
+  "currency": "USD",
+  "billing": {
+    "email": "buyer@example.com",
+    "first_name": "Casey",
+    "last_name": "Nguyen"
+  }
+}

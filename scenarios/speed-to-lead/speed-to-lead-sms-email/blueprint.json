@@ -1,0 +1,248 @@
+{
+  "name": "Speed-to-lead SMS and email",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the form"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "twilio:SendSMS",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "to": "{{1.phone}}",
+        "from": "YOUR_TWILIO_NUMBER",
+        "message": "Hi {{1.name}}, we received \"{{1.need}}\". A person will follow up shortly."
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Text the lead"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:twilio",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Lead SMS failed for {{1.phone}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert SMS"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "google-email:ActionSendEmail",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "",
+        "to": [
+          "{{1.email}}"
+        ],
+        "cc": [],
+        "bcc": [],
+        "replyTo": "",
+        "subject": "We got your request",
+        "html": "<p>Hi {{1.name}},</p><p>Thanks for the note about {{1.need}}. We will reply from this mailbox.</p>",
+        "attachments": []
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Email the lead"
+        },
+        "parameters": [
+          {
+            "name": "account",
+            "type": "account:google-restricted",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Page the on-call owner after hours"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 7,
+              "module": "twilio:SendSMS",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "to": "YOUR_ONCALL_NUMBER",
+                "from": "YOUR_TWILIO_NUMBER",
+                "message": "After-hours lead: {{1.name}} {{1.phone}} — {{1.need}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 0,
+                  "name": "Text the on-call owner"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:twilio",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Payload says after hours",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.after_hours}}",
+                      "o": "boolean:equal",
+                      "b": "true"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 8,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "New lead {{1.name}} — {{1.need}}. SMS and email already sent.",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 300,
+                  "name": "Post it to the daytime channel"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "During the day",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.after_hours}}",
+                      "o": "boolean:equal",
+                      "b": "false"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "from": "supplier@example.com",
+  "subject": "Delay on PO 5501",
+  "text": "PO 5501 will ship 2026-12-18 instead of 2026-12-04. Glaze shortage."
+}

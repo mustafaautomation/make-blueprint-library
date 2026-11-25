@@ -1,0 +1,415 @@
+{
+  "name": "Repurpose an RSS article into LinkedIn, Facebook, and X",
+  "flow": [
+    {
+      "id": 1,
+      "module": "rss:TriggerNewArticle",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "url": "https://example.com/feed.xml",
+        "maxResults": 2
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Watch the blog feed"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "900",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You repurpose a blog post. Return JSON only with keys linkedin (under 1200 characters), facebook (under 500), and x (under 240). No invented statistics."
+          },
+          {
+            "role": "user",
+            "content": "Title: {{1.title}}\nURL: {{1.url}}\n{{1.description}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Write the three posts"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Social copy failed for {{1.title}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert copy"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{2.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Parse the three posts"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.title}}",
+          "2": "{{1.url}}",
+          "3": "{{5.linkedin}}",
+          "4": "{{5.facebook}}",
+          "5": "{{5.x}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Archive the copy"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "Publish to each network"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 8,
+              "module": "linkedin:CreatePost",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "text": "{{5.linkedin}}\n{{1.url}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 0,
+                  "name": "Publish on LinkedIn"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:linkedin",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 9,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "LinkedIn post failed for {{1.title}}.",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1500,
+                      "y": 300,
+                      "name": "Alert LinkedIn"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 10,
+                  "module": "builtin:Ignore",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {},
+                  "metadata": {
+                    "designer": {
+                      "x": 1800,
+                      "y": 300,
+                      "name": "Skip (Ignore)"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 11,
+              "module": "facebook-pages:CreatePost",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "message": "{{5.facebook}}\n{{1.url}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 300,
+                  "name": "Publish on the Facebook page"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:facebook-pages",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 12,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "Facebook post failed for {{1.title}}.",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1500,
+                      "y": 600,
+                      "name": "Alert Facebook"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 13,
+                  "module": "builtin:Ignore",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {},
+                  "metadata": {
+                    "designer": {
+                      "x": 1800,
+                      "y": 600,
+                      "name": "Skip (Ignore)"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 14,
+              "module": "twitter:createATweet",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "text": "{{5.x}} {{1.url}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 600,
+                  "name": "Publish on X"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:twitter",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 15,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "X post failed for {{1.title}}.",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1500,
+                      "y": 900,
+                      "name": "Alert X"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 16,
+                  "module": "builtin:Ignore",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {},
+                  "metadata": {
+                    "designer": {
+                      "x": 1800,
+                      "y": 900,
+                      "name": "Skip (Ignore)"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

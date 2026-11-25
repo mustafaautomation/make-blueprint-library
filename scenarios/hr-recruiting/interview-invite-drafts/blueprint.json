@@ -1,0 +1,96 @@
+{
+  "name": "Interview invite drafts from a sheet",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-sheets:filterRows",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "tableFirstRow": "A1:Z1",
+        "valueRenderOption": "FORMATTED_VALUE",
+        "dateTimeRenderOption": "FORMATTED_STRING",
+        "limit": 20,
+        "filter": [
+          [
+            {
+              "a": "A",
+              "o": "text:equal",
+              "b": "YES"
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Find rows to send"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-email:ActionCreateDraft",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "",
+        "to": [
+          "{{1.`1`}}"
+        ],
+        "cc": [],
+        "bcc": [],
+        "replyTo": "",
+        "subject": "Interview: {{1.`3`}}",
+        "html": "<p>Hi {{1.`2`}},</p><p>We would like to talk about the {{1.`3`}} role. Reply with two times that work.</p>",
+        "attachments": []
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Draft the invite"
+        },
+        "parameters": [
+          {
+            "name": "account",
+            "type": "account:google-restricted",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    }
+  }
+}

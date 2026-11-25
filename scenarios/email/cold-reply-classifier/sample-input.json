@@ -1,0 +1,5 @@
+{
+  "from": "buyer@example.com",
+  "subject": "Re: quick question about invoices",
+  "text": "This is relevant. Can you do Thursday at 15:00 UTC?"
+}

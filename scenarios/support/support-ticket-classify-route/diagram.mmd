@@ -1,0 +1,28 @@
+flowchart LR
+  ticket(("1 · Catch the Zendesk webhook"))
+  cls(("2 · Classify priority"))
+  ticket --> cls
+  cls -->|"error"| cls_alert
+  cls_alert(("3 · Alert classify"))
+  cls_directive(("4 · Retry (Break)"))
+  cls_alert --> cls_directive
+  parsed(("5 · Parse priority"))
+  cls --> parsed
+  log(("6 · Log the decision"))
+  parsed --> log
+  priority{"7 · Update Zendesk, page Slack if urgent"}
+  log --> priority
+  urgent_ticket(("8 · Mark the ticket urgent"))
+  urgent_ticket -->|"error"| urgent_ticket_alert
+  urgent_ticket_alert(("9 · Alert Zendesk"))
+  urgent_ticket_directive(("10 · Retry (Break)"))
+  urgent_ticket_alert --> urgent_ticket_directive
+  page(("11 · Page the urgent channel"))
+  urgent_ticket --> page
+  priority -->|"Urgent"| urgent_ticket
+  normal_ticket(("12 · Comment on the normal ticket"))
+  normal_ticket -->|"error"| normal_ticket_alert
+  normal_ticket_alert(("13 · Alert Zendesk"))
+  normal_ticket_directive(("14 · Skip (Ignore)"))
+  normal_ticket_alert --> normal_ticket_directive
+  priority -->|"Normal"| normal_ticket

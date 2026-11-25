@@ -1,0 +1,24 @@
+flowchart LR
+  mail(("1 · Watch the shared inbox"))
+  triage(("2 · Classify and draft"))
+  mail --> triage
+  triage -->|"error"| triage_alert
+  triage_alert(("3 · Alert triage"))
+  triage_directive(("4 · Resume"))
+  triage_alert --> triage_directive
+  parsed(("5 · Parse the classification"))
+  triage --> parsed
+  log(("6 · Log the classification"))
+  parsed --> log
+  intent{"7 · Draft in the right voice"}
+  log --> intent
+  sales(("8 · Draft the sales reply"))
+  intent -->|"Sales"| sales
+  billing(("9 · Draft the billing reply"))
+  finance(("10 · Ping finance"))
+  billing --> finance
+  intent -->|"Billing"| billing
+  support(("11 · Draft the support reply"))
+  intent -->|"Support"| support
+  review(("12 · Ask someone to read it"))
+  intent -->|"Review"| review

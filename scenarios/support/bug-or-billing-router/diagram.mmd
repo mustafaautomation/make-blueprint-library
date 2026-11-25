@@ -1,0 +1,18 @@
+flowchart LR
+  lead(("1 · Catch the webhook"))
+  model(("2 · Score the payload"))
+  lead --> model
+  model -->|"error"| model_alert
+  model_alert(("3 · Alert scoring"))
+  model_directive(("4 · Retry (Break)"))
+  model_alert --> model_directive
+  parsed(("5 · Parse the score"))
+  model --> parsed
+  log(("6 · Log it"))
+  parsed --> log
+  band{"7 · Branch on the score"}
+  log --> band
+  high(("8 · Ping engineering"))
+  band -->|"High"| high
+  low(("9 · Ping billing"))
+  band -->|"Low"| low

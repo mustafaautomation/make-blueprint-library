@@ -1,0 +1,3 @@
+{
+  "note": "Nothing posts into this scenario. Run it once after the Stripe key is in the HTTP header. It reads Stripe, it does not take this file as input."
+}

@@ -1,0 +1,5 @@
+{
+  "title": "Exports no longer fail past 1000 rows",
+  "url": "https://example.com/post",
+  "description": "The CSV export paginates. Customers with large sheets should retry once."
+}

@@ -1,0 +1,32 @@
+flowchart LR
+  post(("1 · Watch the blog feed"))
+  copy(("2 · Write the three posts"))
+  post --> copy
+  copy -->|"error"| copy_alert
+  copy_alert(("3 · Alert copy"))
+  copy_directive(("4 · Retry (Break)"))
+  copy_alert --> copy_directive
+  parsed(("5 · Parse the three posts"))
+  copy --> parsed
+  log(("6 · Archive the copy"))
+  parsed --> log
+  networks{"7 · Publish to each network"}
+  log --> networks
+  li(("8 · Publish on LinkedIn"))
+  li -->|"error"| li_alert
+  li_alert(("9 · Alert LinkedIn"))
+  li_directive(("10 · Skip (Ignore)"))
+  li_alert --> li_directive
+  networks -->|"LinkedIn"| li
+  fb(("11 · Publish on the Facebook page"))
+  fb -->|"error"| fb_alert
+  fb_alert(("12 · Alert Facebook"))
+  fb_directive(("13 · Skip (Ignore)"))
+  fb_alert --> fb_directive
+  networks -->|"Facebook"| fb
+  tweet(("14 · Publish on X"))
+  tweet -->|"error"| tweet_alert
+  tweet_alert(("15 · Alert X"))
+  tweet_directive(("16 · Skip (Ignore)"))
+  tweet_alert --> tweet_directive
+  networks -->|"X"| tweet

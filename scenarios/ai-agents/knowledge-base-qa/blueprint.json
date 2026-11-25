@@ -1,0 +1,280 @@
+{
+  "name": "Knowledge-base Q&A from a sheet",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the question"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-sheets:filterRows",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "tableFirstRow": "A1:Z1",
+        "valueRenderOption": "FORMATTED_VALUE",
+        "dateTimeRenderOption": "FORMATTED_STRING",
+        "limit": 8,
+        "filter": [
+          [
+            {
+              "a": "A",
+              "o": "text:equal",
+              "b": "{{1.category}}"
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Find rows in that category"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:TextAggregator",
+      "version": 1,
+      "parameters": {
+        "feeder": 2,
+        "rowSeparator": "\n"
+      },
+      "mapper": {
+        "value": "{{2.`1`}}: {{2.`2`}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Join the matches"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "400",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer only from the notes. Return JSON: answer (string), confidence (0 to 1). If the notes do not say, confidence under 0.4 and answer that you do not know."
+          },
+          {
+            "role": "user",
+            "content": "Question: {{1.question}}\nNotes:\n{{3.text}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Answer from the digest only"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 5,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Knowledge-base answer failed.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 900,
+              "y": 300,
+              "name": "Alert QA"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 1200,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{4.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "Parse the answer"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0,
+          "name": "Respond, and flag weak answers"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 9,
+              "module": "gateway:WebhookRespond",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "status": 200,
+                "body": "{{7.answer}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 0,
+                  "name": "Return the answer"
+                }
+              },
+              "filter": {
+                "name": "At least 0.6",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{7.confidence}}",
+                      "o": "number:greaterorequal",
+                      "b": "0.6"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 10,
+              "module": "gateway:WebhookRespond",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "status": 200,
+                "body": "{{7.answer}}\n\nA person should confirm this."
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 300,
+                  "name": "Return a cautious answer"
+                }
+              },
+              "filter": {
+                "name": "Below 0.6",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{7.confidence}}",
+                      "o": "number:less",
+                      "b": "0.6"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

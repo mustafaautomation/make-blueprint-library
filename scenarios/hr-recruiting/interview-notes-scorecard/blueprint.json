@@ -1,0 +1,185 @@
+{
+  "name": "Interview notes to a scorecard cell",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-sheets:watchRows",
+      "version": 2,
+      "parameters": {
+        "mode": "select",
+        "from": "drive",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "tableFirstRow": "A1:Z1",
+        "limit": 5,
+        "valueRenderOption": "FORMATTED_VALUE",
+        "dateTimeRenderOption": "FORMATTED_STRING"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Watch new rows"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "400",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You write interview scorecards from notes only."
+          },
+          {
+            "role": "user",
+            "content": "Write a scorecard in four lines: recommendation (yes, no, or unclear), strength, gap, evidence. Use only these notes. Do not infer university, age, or gender.\n\n{{1.`0`}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Write the cell"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Row model failed.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert row"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "google-sheets:updateRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "mode": "map",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "rowNumber": "{{1.__ROW_NUMBER__}}",
+        "tableFirstRow": "A1:Z1",
+        "includesHeaders": true,
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "1": "{{2.result}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Write the result back"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "filter": {
+        "name": "Result exists",
+        "conditions": [
+          [
+            {
+              "a": "{{2.result}}",
+              "o": "exist"
+            }
+          ]
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

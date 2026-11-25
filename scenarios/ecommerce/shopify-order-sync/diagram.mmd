@@ -1,0 +1,16 @@
+flowchart LR
+  order(("1 · Catch orders/create"))
+  log(("2 · Log the order"))
+  order --> log
+  ops(("3 · Ping the ops channel"))
+  log --> ops
+  paid{"4 · Create a contact only when paid"}
+  ops --> paid
+  contact(("5 · Create the customer"))
+  contact -->|"error"| contact_alert
+  contact_alert(("6 · Alert HubSpot"))
+  contact_directive(("7 · Skip (Ignore)"))
+  contact_alert --> contact_directive
+  paid -->|"Paid"| contact
+  skip_note(("8 · Note that CRM was skipped"))
+  paid -->|"Not paid"| skip_note

@@ -1,0 +1,10 @@
+{
+  "id": 1001,
+  "order_number": 1001,
+  "financial_status": "paid",
+  "total_price": "86.00",
+  "currency": "USD",
+  "email": "buyer@example.com",
+  "first_name": "Casey",
+  "last_name": "Nguyen"
+}

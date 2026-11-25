@@ -1,0 +1,120 @@
+# Rescued from Cursor
+
+Source: make-blueprint-library | Cursor https://cursor.com/agents/bc-6aa8248d-522e-50d2-8774-90fb2f9100b4
+Scope: All Commits
+Captured: 2026-11-25T13:12:52.299Z
+Files written: 484
+
+Not in this copy: files Cursor's template created and the agent never changed (e.g. tsconfig, shadcn ui components, lockfiles, public assets) when scope is 'Last Agent Turn'; binaries.
+
+- binary not recoverable from diff view: scenarios/ai-agents/assistant-agent-with-tools/diagram.png
+- binary not recoverable from diff view: scenarios/ai-agents/claude-page-summary/diagram.png
+- binary not recoverable from diff view: scenarios/ai-agents/gemini-blurb-summary/diagram.png
+- binary not recoverable from diff view: scenarios/ai-agents/knowledge-base-qa/diagram.png
+- binary not recoverable from diff view: scenarios/ai-agents/moderation-allow-or-block/diagram.png
+- binary not recoverable from diff view: scenarios/ai-agents/onboarding-agent-webhook/diagram.png
+- binary not recoverable from diff view: scenarios/ai-agents/policy-agent-webhook/diagram.png
+- binary not recoverable from diff view: scenarios/booking/appointment-booking-confirm/diagram.png
+- binary not recoverable from diff view: scenarios/booking/appointment-day-before-reminder/diagram.png
+- binary not recoverable from diff view: scenarios/booking/intake-brief-for-host/diagram.png
+- binary not recoverable from diff view: scenarios/booking/no-show-text-back/diagram.png
+- binary not recoverable from diff view: scenarios/booking/reschedule-webhook-log/diagram.png
+- binary not recoverable from diff view: scenarios/booking/round-robin-host-ping/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/abandoned-checkout-text/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/line-items-to-sheet/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/low-stock-slack/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/product-blurb-to-description/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/review-sentiment-slack/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/shopify-order-sync/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/shopify-refund-alert/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/supplier-delay-email/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/vip-order-slack/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/woo-refund-note/diagram.png
+- binary not recoverable from diff view: scenarios/ecommerce/woocommerce-order-sync/diagram.png
+- binary not recoverable from diff view: scenarios/email/ai-email-triage-drafts/diagram.png
+- binary not recoverable from diff view: scenarios/email/cold-reply-classifier/diagram.png
+- binary not recoverable from diff view: scenarios/email/intro-request-draft-note/diagram.png
+- binary not recoverable from diff view: scenarios/email/legal-keyword-mail-to-slack/diagram.png
+- binary not recoverable from diff view: scenarios/email/new-client-ack-draft/diagram.png
+- binary not recoverable from diff view: scenarios/email/newsletter-reply-not-a-lead/diagram.png
+- binary not recoverable from diff view: scenarios/email/order-email-to-sheet/diagram.png
+- binary not recoverable from diff view: scenarios/email/out-of-office-skip-log/diagram.png
+- binary not recoverable from diff view: scenarios/finance/bank-csv-rows-to-sheet/diagram.png
+- binary not recoverable from diff view: scenarios/finance/invoice-paid-webhook/diagram.png
+- binary not recoverable from diff view: scenarios/finance/monthly-expense-anomaly/diagram.png
+- binary not recoverable from diff view: scenarios/finance/stripe-balance-reconciliation/diagram.png
+- binary not recoverable from diff view: scenarios/finance/stripe-charge-succeeded-log/diagram.png
+- binary not recoverable from diff view: scenarios/finance/stripe-payment-failed-text/diagram.png
+- binary not recoverable from diff view: scenarios/finance/stripe-refund-log/diagram.png
+- binary not recoverable from diff view: scenarios/finance/subscription-canceled-log/diagram.png
+- binary not recoverable from diff view: scenarios/hr-recruiting/application-ack-draft/diagram.png
+- binary not recoverable from diff view: scenarios/hr-recruiting/hr-cv-parse-score/diagram.png
+- binary not recoverable from diff view: scenarios/hr-recruiting/interview-invite-drafts/diagram.png
+- binary not recoverable from diff view: scenarios/hr-recruiting/interview-notes-scorecard/diagram.png
+- binary not recoverable from diff view: scenarios/hr-recruiting/offer-details-draft-slot/diagram.png
+- binary not recoverable from diff view: scenarios/hr-recruiting/referral-candidate-slack/diagram.png
+- binary not recoverable from diff view: scenarios/hr-recruiting/rejection-stage-draft/diagram.png
+- binary not recoverable from diff view: scenarios/invoices-docs/ai-invoice-gmail-sheets-xero/diagram.png
+- binary not recoverable from diff view: scenarios/invoices-docs/credit-note-or-invoice/diagram.png
+- binary not recoverable from diff view: scenarios/invoices-docs/duplicate-invoice-subject/diagram.png
+- binary not recoverable from diff view: scenarios/invoices-docs/invoice-approval-by-amount/diagram.png
+- binary not recoverable from diff view: scenarios/invoices-docs/receipt-to-expense-sheet/diagram.png
+- binary not recoverable from diff view: scenarios/invoices-docs/vendor-statement-to-sheet/diagram.png
+- binary not recoverable from diff view: scenarios/invoices-docs/w9-email-to-sheet/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/ai-lead-gohighlevel/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/ai-lead-pipedrive/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/ai-lead-score-hubspot/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/airtable-crm-ai-summary/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/chat-widget-qualify-hubspot/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/event-booth-lead/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/linkedin-row-outreach-draft/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/partner-referral-score/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/pricing-page-chat/diagram.png
+- binary not recoverable from diff view: scenarios/lead-gen-crm/webinar-registration-score/diagram.png
+- binary not recoverable from diff view: scenarios/reporting/ad-spend-anomaly-note/diagram.png
+- binary not recoverable from diff view: scenarios/reporting/daily-sales-digest/diagram.png
+- binary not recoverable from diff view: scenarios/reporting/hiring-funnel-note/diagram.png
+- binary not recoverable from diff view: scenarios/reporting/inventory-value-email/diagram.png
+- binary not recoverable from diff view: scenarios/reporting/month-end-checklist-note/diagram.png
+- binary not recoverable from diff view: scenarios/reporting/pipeline-snapshot-note/diagram.png
+- binary not recoverable from diff view: scenarios/reporting/support-volume-narrative/diagram.png
+- binary not recoverable from diff view: scenarios/reporting/weekly-kpi-slack-email/diagram.png
+- binary not recoverable from diff view: scenarios/scraping-enrichment/apify-run-to-sheet-shape/diagram.png
+- binary not recoverable from diff view: scenarios/scraping-enrichment/clearbit-style-enrichment/diagram.png
+- binary not recoverable from diff view: scenarios/scraping-enrichment/industry-rss-to-slack/diagram.png
+- binary not recoverable from diff view: scenarios/scraping-enrichment/job-feed-to-sheet/diagram.png
+- binary not recoverable from diff view: scenarios/scraping-enrichment/public-page-title-fetch/diagram.png
+- binary not recoverable from diff view: scenarios/scraping-enrichment/release-notes-for-support/diagram.png
+- binary not recoverable from diff view: scenarios/scraping-enrichment/scrape-enrich-sheets/diagram.png
+- binary not recoverable from diff view: scenarios/slack-notion-clickup/bug-report-to-clickup/diagram.png
+- binary not recoverable from diff view: scenarios/slack-notion-clickup/clickup-status-to-slack/diagram.png
+- binary not recoverable from diff view: scenarios/slack-notion-clickup/meeting-notes-to-clickup/diagram.png
+- binary not recoverable from diff view: scenarios/slack-notion-clickup/notion-comment-webhook-to-slack/diagram.png
+- binary not recoverable from diff view: scenarios/slack-notion-clickup/sheet-row-to-notion-proxy/diagram.png
+- binary not recoverable from diff view: scenarios/slack-notion-clickup/slack-notion-clickup/diagram.png
+- binary not recoverable from diff view: scenarios/slack-notion-clickup/standup-rows-to-slack/diagram.png
+- binary not recoverable from diff view: scenarios/social/competitor-changelog-rss/diagram.png
+- binary not recoverable from diff view: scenarios/social/content-calendar-caption/diagram.png
+- binary not recoverable from diff view: scenarios/social/mention-webhook-to-slack/diagram.png
+- binary not recoverable from diff view: scenarios/social/social-repurpose-channels/diagram.png
+- binary not recoverable from diff view: scenarios/social/testimonial-to-quote-card/diagram.png
+- binary not recoverable from diff view: scenarios/social/thread-to-linkedin-and-short/diagram.png
+- binary not recoverable from diff view: scenarios/social/weekly-social-stats-note/diagram.png
+- binary not recoverable from diff view: scenarios/social/youtube-rss-show-notes/diagram.png
+- binary not recoverable from diff view: scenarios/speed-to-lead/after-hours-owner-only/diagram.png
+- binary not recoverable from diff view: scenarios/speed-to-lead/callback-request-score/diagram.png
+- binary not recoverable from diff view: scenarios/speed-to-lead/demo-request-draft/diagram.png
+- binary not recoverable from diff view: scenarios/speed-to-lead/missed-call-text-back/diagram.png
+- binary not recoverable from diff view: scenarios/speed-to-lead/quote-request-text-owner/diagram.png
+- binary not recoverable from diff view: scenarios/speed-to-lead/speed-to-lead-sms-email/diagram.png
+- binary not recoverable from diff view: scenarios/speed-to-lead/trial-signup-speed-to-lead/diagram.png
+- binary not recoverable from diff view: scenarios/support/bug-or-billing-router/diagram.png
+- binary not recoverable from diff view: scenarios/support/changelog-rss-to-slack/diagram.png
+- binary not recoverable from diff view: scenarios/support/csat-webhook-to-sheet/diagram.png
+- binary not recoverable from diff view: scenarios/support/refund-request-to-finance/diagram.png
+- binary not recoverable from diff view: scenarios/support/status-page-to-slack/diagram.png
+- binary not recoverable from diff view: scenarios/support/support-macro-from-note/diagram.png
+- binary not recoverable from diff view: scenarios/support/support-ticket-classify-route/diagram.png
+- binary not recoverable from diff view: scenarios/support/vip-domain-ticket/diagram.png
+- may be incomplete (check): schema/modules.allowlist.json
+- may be incomplete (check): catalog.json

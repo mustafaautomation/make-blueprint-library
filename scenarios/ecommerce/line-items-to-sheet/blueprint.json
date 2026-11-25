@@ -1,0 +1,153 @@
+{
+  "name": "Order line items into a sheet",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the batch"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{1.lines}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "One bundle per item"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{1.order_number}}",
+          "1": "{{2.sku}}",
+          "2": "{{2.qty}}",
+          "3": "{{2.name}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Write the item"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "util:TextAggregator",
+      "version": 1,
+      "parameters": {
+        "feeder": 2,
+        "rowSeparator": "\n"
+      },
+      "mapper": {
+        "value": "{{1.order_number}} {{2.sku}} x {{2.qty}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Summarize the batch"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "mapper": {
+        "channelWType": "list",
+        "channelType": "public",
+        "channel": "",
+        "text": "*Lines for {{1.order_number}}*\n{{4.text}}",
+        "mrkdwn": true,
+        "parse": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "Post the batch"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:slack2,slack3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 6,
+          "module": "builtin:Ignore",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 1200,
+              "y": 300,
+              "name": "Skip (Ignore)"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    }
+  }
+}

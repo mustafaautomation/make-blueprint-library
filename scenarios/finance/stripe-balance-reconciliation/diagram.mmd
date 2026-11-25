@@ -1,0 +1,16 @@
+flowchart LR
+  tx(("1 · List balance transactions"))
+  tx -->|"error"| tx_alert
+  tx_alert(("2 · Alert Stripe"))
+  tx_directive(("3 · Retry (Break)"))
+  tx_alert --> tx_directive
+  item(("4 · One bundle per transaction"))
+  tx --> item
+  line(("5 · Write the transaction"))
+  item --> line
+  digest(("6 · Collect the ids"))
+  line --> digest
+  ping(("7 · Post the import summary"))
+  digest --> ping
+  ping -->|"error"| ping_directive
+  ping_directive(("8 · Skip (Ignore)"))

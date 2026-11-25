@@ -1,0 +1,9 @@
+{
+  "event": "invitee.created",
+  "name": "Alex Rivera",
+  "email": "alex.rivera@example.com",
+  "phone": "+15555550123",
+  "start": "2026-12-02T15:00:00Z",
+  "event_type": "Intro call",
+  "host": "ops@example.com"
+}

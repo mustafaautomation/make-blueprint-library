@@ -1,0 +1,5 @@
+{
+  "from": "buyer@example.com",
+  "subject": "Pricing for the annual plan",
+  "text": "Can you send pricing for 25 seats, annual, and a start date in January?"
+}

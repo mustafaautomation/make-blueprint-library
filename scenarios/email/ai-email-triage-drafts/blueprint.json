@@ -1,0 +1,422 @@
+{
+  "name": "AI email triage and draft replies",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-email:TriggerWatchEmails",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "q": "in:inbox is:unread -category:promotions",
+        "maxResults": 5
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Watch the shared inbox"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google-restricted",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "600",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You triage a shared inbox. Return JSON only with keys intent (sales, billing, support, or review), summary (one sentence), and reply (a short plain-text email body). Do not promise refunds or discounts."
+          },
+          {
+            "role": "user",
+            "content": "From: {{1.from}}\nSubject: {{1.subject}}\n\n{{1.text}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Classify and draft"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Email triage model failed for {{1.subject}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert triage"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Resume",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "result": "{\"intent\":\"review\",\"summary\":\"Model unavailable\",\"reply\":\"Thanks for the note. A person on the team will reply shortly.\"}"
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Resume"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{2.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Parse the classification"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.from}}",
+          "2": "{{1.subject}}",
+          "3": "{{5.intent}}",
+          "4": "{{5.summary}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Log the classification"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "Draft in the right voice"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 8,
+              "module": "google-email:ActionCreateDraft",
+              "version": 2,
+              "parameters": {},
+              "mapper": {
+                "from": "",
+                "to": [
+                  "{{1.from}}"
+                ],
+                "cc": [],
+                "bcc": [],
+                "replyTo": "",
+                "subject": "Re: {{1.subject}}",
+                "html": "<p>{{5.reply}}</p>",
+                "attachments": []
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 0,
+                  "name": "Draft the sales reply"
+                },
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "account:google-restricted",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Sales",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.intent}}",
+                      "o": "text:equal",
+                      "b": "sales"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 9,
+              "module": "google-email:ActionCreateDraft",
+              "version": 2,
+              "parameters": {},
+              "mapper": {
+                "from": "",
+                "to": [
+                  "{{1.from}}"
+                ],
+                "cc": [],
+                "bcc": [],
+                "replyTo": "",
+                "subject": "Re: {{1.subject}}",
+                "html": "<p>{{5.reply}}</p>",
+                "attachments": []
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 300,
+                  "name": "Draft the billing reply"
+                },
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "account:google-restricted",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Billing",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.intent}}",
+                      "o": "text:equal",
+                      "b": "billing"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 10,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "*Billing mail* from {{1.from}}: {{5.summary}}",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 300,
+                  "name": "Ping finance"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 11,
+              "module": "google-email:ActionCreateDraft",
+              "version": 2,
+              "parameters": {},
+              "mapper": {
+                "from": "",
+                "to": [
+                  "{{1.from}}"
+                ],
+                "cc": [],
+                "bcc": [],
+                "replyTo": "",
+                "subject": "Re: {{1.subject}}",
+                "html": "<p>{{5.reply}}</p>",
+                "attachments": []
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 600,
+                  "name": "Draft the support reply"
+                },
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "account:google-restricted",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Support",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.intent}}",
+                      "o": "text:equal",
+                      "b": "support"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 12,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "*Read this mail* {{1.subject}} from {{1.from}}. {{5.summary}}",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 900,
+                  "name": "Ask someone to read it"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Review",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.intent}}",
+                      "o": "text:equal",
+                      "b": "review"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    }
+  }
+}

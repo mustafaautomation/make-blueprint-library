@@ -1,0 +1,30 @@
+flowchart LR
+  lead(("1 · Catch the lead"))
+  score(("2 · Score the evaluation"))
+  lead --> score
+  score -->|"error"| score_alert
+  score_alert(("3 · Alert scoring"))
+  score_directive(("4 · Retry (Break)"))
+  score_alert --> score_directive
+  parsed(("5 · Parse the score"))
+  score --> parsed
+  person(("6 · Create the Pipedrive person"))
+  parsed --> person
+  person -->|"error"| person_alert
+  person_alert(("7 · Alert Pipedrive"))
+  person_directive(("8 · Retry (Break)"))
+  person_alert --> person_directive
+  log(("9 · Log the person"))
+  person --> log
+  deal{"10 · Open a deal only when it is real"}
+  log --> deal
+  deal_call(("11 · Create the deal"))
+  deal_call -->|"error"| deal_call_alert
+  deal_call_alert(("12 · Alert deal"))
+  deal_call_directive(("13 · Retry (Break)"))
+  deal_call_alert --> deal_call_directive
+  ping(("14 · Tell the pipeline channel"))
+  deal_call --> ping
+  deal -->|"Open the deal"| deal_call
+  quiet(("15 · Note that no deal was opened"))
+  deal -->|"Person only"| quiet

@@ -1,0 +1,6 @@
+{
+  "refund_id": "re_demo_1",
+  "charge_id": "ch_demo_1001",
+  "amount": "2000",
+  "currency": "usd"
+}

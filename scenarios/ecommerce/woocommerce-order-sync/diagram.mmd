@@ -1,0 +1,12 @@
+flowchart LR
+  order(("1 · Catch order.created"))
+  log(("2 · Log the order"))
+  order --> log
+  note(("3 · Write the order note"))
+  log --> note
+  note -->|"error"| note_alert
+  note_alert(("4 · Alert Woo note"))
+  note_directive(("5 · Skip (Ignore)"))
+  note_alert --> note_directive
+  ops(("6 · Ping the packer channel"))
+  note --> ops

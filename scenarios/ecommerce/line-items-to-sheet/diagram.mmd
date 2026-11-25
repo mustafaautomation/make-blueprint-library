@@ -1,0 +1,12 @@
+flowchart LR
+  hook(("1 · Catch the batch"))
+  item(("2 · One bundle per item"))
+  hook --> item
+  line(("3 · Write the item"))
+  item --> line
+  digest(("4 · Summarize the batch"))
+  line --> digest
+  ping(("5 · Post the batch"))
+  digest --> ping
+  ping -->|"error"| ping_directive
+  ping_directive(("6 · Skip (Ignore)"))

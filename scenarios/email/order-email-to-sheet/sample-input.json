@@ -1,0 +1,5 @@
+{
+  "from": "orders@example.com",
+  "subject": "Order 5501 confirmed",
+  "text": "Thanks for order 5501. Total USD 640.00. Ships 2026-12-04."
+}

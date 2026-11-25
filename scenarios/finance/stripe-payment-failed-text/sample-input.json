@@ -1,0 +1,6 @@
+{
+  "customer": "buyer@example.com",
+  "amount": "4900",
+  "currency": "usd",
+  "reason": "card_declined"
+}

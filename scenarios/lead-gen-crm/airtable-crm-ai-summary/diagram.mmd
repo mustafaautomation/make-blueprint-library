@@ -1,0 +1,16 @@
+flowchart LR
+  rec(("1 · Watch CRM records"))
+  summary(("2 · Summarize the notes"))
+  rec --> summary
+  summary -->|"error"| summary_alert
+  summary_alert(("3 · Alert Airtable"))
+  summary_directive(("4 · Retry (Break)"))
+  summary_alert --> summary_directive
+  save(("5 · Write the AI summary"))
+  summary --> save
+  save -->|"error"| save_alert
+  save_alert(("6 · Alert Airtable"))
+  save_directive(("7 · Skip (Ignore)"))
+  save_alert --> save_directive
+  won(("8 · Ping when the stage is Won"))
+  save --> won

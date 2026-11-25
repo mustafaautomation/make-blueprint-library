@@ -1,0 +1,20 @@
+flowchart LR
+  q(("1 · Catch the question"))
+  rows(("2 · Find rows in that category"))
+  q --> rows
+  digest(("3 · Join the matches"))
+  rows --> digest
+  answer(("4 · Answer from the digest only"))
+  digest --> answer
+  answer -->|"error"| answer_alert
+  answer_alert(("5 · Alert QA"))
+  answer_directive(("6 · Retry (Break)"))
+  answer_alert --> answer_directive
+  parsed(("7 · Parse the answer"))
+  answer --> parsed
+  gate{"8 · Respond, and flag weak answers"}
+  parsed --> gate
+  ok(("9 · Return the answer"))
+  gate -->|"Confident"| ok
+  weak(("10 · Return a cautious answer"))
+  gate -->|"Weak"| weak

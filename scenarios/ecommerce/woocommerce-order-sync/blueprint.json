@@ -1,0 +1,213 @@
+{
+  "name": "WooCommerce order sync to Sheets and an order note",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch order.created"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.number}}",
+          "2": "{{1.billing.email}}",
+          "3": "{{1.total}}",
+          "4": "{{1.status}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Log the order"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true
+      },
+      "mapper": {
+        "url": "https://shop.example.com/wp-json/wc/v3/orders/{{1.id}}/notes",
+        "serializeUrl": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Accept",
+            "value": "application/json"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [
+          {
+            "name": "consumer_key",
+            "value": "YOUR_WOO_CONSUMER_KEY"
+          },
+          {
+            "name": "consumer_secret",
+            "value": "YOUR_WOO_CONSUMER_SECRET"
+          }
+        ],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "contentType": "application/json",
+        "data": "{\"note\":\"Logged to the packing sheet by the portfolio demo scenario.\",\"customer_note\":false}",
+        "timeout": "",
+        "shareCookies": false,
+        "ca": "",
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "gzip": true,
+        "useMtls": false,
+        "followAllRedirects": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Write the order note"
+        }
+      },
+      "onerror": [
+        {
+          "id": 4,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Order note failed for Woo order {{1.number}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Alert Woo note"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 5,
+          "module": "builtin:Ignore",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 900,
+              "y": 300,
+              "name": "Skip (Ignore)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "mapper": {
+        "channelWType": "list",
+        "channelType": "public",
+        "channel": "",
+        "text": "*Woo order* {{1.number}} {{1.currency}} {{1.total}} — {{1.status}} — {{1.billing.email}}",
+        "mrkdwn": true,
+        "parse": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Ping the packer channel"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:slack2,slack3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "filter": {
+        "name": "Processing orders",
+        "conditions": [
+          [
+            {
+              "a": "{{1.status}}",
+              "o": "text:equal",
+              "b": "processing"
+            }
+          ]
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    }
+  }
+}

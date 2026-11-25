@@ -1,0 +1,5 @@
+{
+  "from": "billing@example.com",
+  "subject": "Invoice 1842 from Harbor Goods",
+  "text": "Harbor Goods\nInvoice number 1842\nCurrency USD\nTotal 1280.00\nDue date 2026-12-15\nDescription: studio rental, November."
+}

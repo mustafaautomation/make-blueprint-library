@@ -1,0 +1,10 @@
+flowchart LR
+  ask(("1 · Catch the question"))
+  agent(("2 · Answer from the checklist"))
+  ask --> agent
+  agent -->|"error"| agent_alert
+  agent_alert(("3 · Alert agent"))
+  agent_directive(("4 · Retry (Break)"))
+  agent_alert --> agent_directive
+  out(("5 · Return the agent text"))
+  agent --> out

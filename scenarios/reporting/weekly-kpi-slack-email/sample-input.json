@@ -1,0 +1,3 @@
+{
+  "note": "This scenario starts from the sheet, not from this payload. Run it once after the sheet has rows with column D set to YES."
+}

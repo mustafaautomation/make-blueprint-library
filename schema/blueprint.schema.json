@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quvantic.com/schemas/make-blueprint.schema.json",
+  "title": "Make scenario blueprint",
+  "description": "Shape of a Make.com scenario blueprint as returned under response.blueprint and accepted by Import Blueprint: top-level name, flow, and metadata. Scheduling is not part of the blueprint.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "flow", "metadata"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "flow": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/module" }
+    },
+    "metadata": { "$ref": "#/$defs/scenarioMetadata" }
+  },
+  "$defs": {
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "module", "version", "metadata"],
+      "properties": {
+        "id": { "type": "integer", "minimum": 1 },
+        "module": { "type": "string", "pattern": "^[a-z0-9-]+:[A-Za-z][A-Za-z0-9_]*$" },
+        "version": { "type": "integer", "minimum": 1 },
+        "parameters": { "type": "object" },
+        "mapper": { "type": ["object", "null"] },
+        "filter": { "type": ["object", "null"] },
+        "metadata": { "$ref": "#/$defs/moduleMetadata" },
+        "routes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/route" }
+        },
+        "onerror": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/module" }
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["flow"],
+      "properties": {
+        "flow": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/module" }
+        }
+      }
+    },
+    "moduleMetadata": {
+      "type": "object",
+      "required": ["designer"],
+      "properties": {
+        "designer": {
+          "type": "object",
+          "required": ["x", "y"],
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "name": { "type": "string" }
+          }
+        },
+        "parameters": { "type": "array" }
+      }
+    },
+    "scenarioMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "designer", "scenario"],
+      "properties": {
+        "instant": { "type": "boolean" },
+        "version": { "type": "integer" },
+        "designer": {
+          "type": "object",
+          "required": ["orphans"],
+          "properties": {
+            "orphans": { "type": "array" }
+          }
+        },
+        "scenario": {
+          "type": "object",
+          "required": [
+            "roundtrips",
+            "maxErrors",
+            "autoCommit",
+            "autoCommitTriggerLast",
+            "sequential",
+            "confidential",
+            "dataloss",
+            "dlq",
+            "freshVariables"
+          ],
+          "properties": {
+            "roundtrips": { "type": "integer", "minimum": 1 },
+            "maxErrors": { "type": "integer", "minimum": 1 },
+            "autoCommit": { "type": "boolean" },
+            "autoCommitTriggerLast": { "type": "boolean" },
+            "sequential": { "type": "boolean" },
+            "confidential": { "type": "boolean" },
+            "dataloss": { "type": "boolean" },
+            "dlq": { "type": "boolean" },
+            "freshVariables": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}

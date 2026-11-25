@@ -1,0 +1,14 @@
+flowchart LR
+  rows(("1 · Read the included rows"))
+  digest(("2 · Join the rows"))
+  rows --> digest
+  model(("3 · Write the note"))
+  digest --> model
+  model -->|"error"| model_alert
+  model_alert(("4 · Alert narrative"))
+  model_directive(("5 · Retry (Break)"))
+  model_alert --> model_directive
+  ping(("6 · Post the narrative"))
+  model --> ping
+  mail(("7 · Email the same note"))
+  ping --> mail

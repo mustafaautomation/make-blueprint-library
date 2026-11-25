@@ -1,0 +1,252 @@
+{
+  "name": "Shopify order sync to Sheets, Slack, and HubSpot",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch orders/create"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.order_number}}",
+          "2": "{{1.email}}",
+          "3": "{{1.total_price}}",
+          "4": "{{1.currency}}",
+          "5": "{{1.financial_status}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Log the order"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "slack:CreateMessage",
+      "version": 4,
+      "parameters": {},
+      "mapper": {
+        "channelWType": "list",
+        "channelType": "public",
+        "channel": "",
+        "text": "*Order* {{1.order_number}} {{1.currency}} {{1.total_price}} — {{1.financial_status}} — {{1.email}}",
+        "mrkdwn": true,
+        "parse": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Ping the ops channel"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:slack2,slack3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Create a contact only when paid"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 5,
+              "module": "hubspotcrm:createContact",
+              "version": 2,
+              "parameters": {},
+              "mapper": {
+                "email": "{{1.email}}",
+                "firstname": "{{1.first_name}}",
+                "lastname": "{{1.last_name}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 0,
+                  "name": "Create the customer"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:hubspotcrm",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Paid",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.financial_status}}",
+                      "o": "text:equal",
+                      "b": "paid"
+                    }
+                  ]
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 6,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "HubSpot contact failed for order {{1.order_number}}.",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1200,
+                      "y": 300,
+                      "name": "Alert HubSpot"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 7,
+                  "module": "builtin:Ignore",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {},
+                  "metadata": {
+                    "designer": {
+                      "x": 1500,
+                      "y": 300,
+                      "name": "Skip (Ignore)"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 8,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "No HubSpot contact for order {{1.order_number}} ({{1.financial_status}}).",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 300,
+                  "name": "Note that CRM was skipped"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Not paid",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{1.financial_status}}",
+                      "o": "text:notequal",
+                      "b": "paid"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    }
+  }
+}

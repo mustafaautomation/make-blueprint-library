@@ -1,0 +1,28 @@
+flowchart LR
+  msg(("1 · Catch the Slack shortcut"))
+  task(("2 · Turn the ramble into a task"))
+  msg --> task
+  task -->|"error"| task_alert
+  task_alert(("3 · Alert task"))
+  task_directive(("4 · Retry (Break)"))
+  task_alert --> task_directive
+  parsed(("5 · Parse the task"))
+  task --> parsed
+  tools{"6 · Create the page and the task"}
+  parsed --> tools
+  page(("7 · Create the Notion page"))
+  page -->|"error"| page_alert
+  page_alert(("8 · Alert Notion"))
+  page_directive(("9 · Skip (Ignore)"))
+  page_alert --> page_directive
+  notion_ok(("10 · Confirm the Notion page"))
+  page --> notion_ok
+  tools -->|"Notion"| page
+  clickup(("11 · Create the ClickUp task"))
+  clickup -->|"error"| clickup_alert
+  clickup_alert(("12 · Alert ClickUp"))
+  clickup_directive(("13 · Skip (Ignore)"))
+  clickup_alert --> clickup_directive
+  clickup_ok(("14 · Confirm the ClickUp task"))
+  clickup --> clickup_ok
+  tools -->|"ClickUp"| clickup

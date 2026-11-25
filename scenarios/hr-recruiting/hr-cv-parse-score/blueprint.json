@@ -1,0 +1,332 @@
+{
+  "name": "Parse a CV email and score it against a rubric",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-email:TriggerWatchEmails",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "q": "label:applicants newer_than:21d",
+        "maxResults": 5
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Watch the applicants label"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google-restricted",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "400",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You screen applications for an operations generalist. Return JSON only: years (number or 0), location (string), score (0-100), gaps (one sentence), recommendation (interview or hold). Interview requires at least three years coordinating vendors or operations, and a stated location. Do not infer gender, age, or university prestige."
+          },
+          {
+            "role": "user",
+            "content": "From: {{1.from}}\nSubject: {{1.subject}}\n\n{{1.text}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Score the application"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "CV scoring failed for {{1.subject}}.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert screening"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{2.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Parse the score"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "mode": "select",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED",
+        "values": {
+          "0": "{{now}}",
+          "1": "{{1.from}}",
+          "2": "{{5.years}}",
+          "3": "{{5.location}}",
+          "4": "{{5.score}}",
+          "5": "{{5.gaps}}",
+          "6": "{{5.recommendation}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Log the score"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0,
+          "name": "Draft the right note"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 8,
+              "module": "google-email:ActionCreateDraft",
+              "version": 2,
+              "parameters": {},
+              "mapper": {
+                "from": "",
+                "to": [
+                  "hiring-manager@example.com"
+                ],
+                "cc": [],
+                "bcc": [],
+                "replyTo": "",
+                "subject": "Screen: {{1.subject}}",
+                "html": "<p>{{1.from}} scored {{5.score}}. {{5.gaps}}</p><p>Location: {{5.location}}. Years: {{5.years}}.</p>",
+                "attachments": []
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 0,
+                  "name": "Draft the hiring-manager note"
+                },
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "account:google-restricted",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Score at least 75",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.score}}",
+                      "o": "number:greaterorequal",
+                      "b": "75"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 9,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "*Interview draft ready* {{1.from}} — {{5.score}}. {{5.gaps}}",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 0,
+                  "name": "Ping the hiring channel"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 10,
+              "module": "google-email:ActionCreateDraft",
+              "version": 2,
+              "parameters": {},
+              "mapper": {
+                "from": "",
+                "to": [
+                  "{{1.from}}"
+                ],
+                "cc": [],
+                "bcc": [],
+                "replyTo": "",
+                "subject": "Re: {{1.subject}}",
+                "html": "<p>Thank you for the application. We have it, and we will write back if we move forward.</p>",
+                "attachments": []
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 300,
+                  "name": "Draft the holding reply"
+                },
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "account:google-restricted",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Under 75",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.score}}",
+                      "o": "number:less",
+                      "b": "75"
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

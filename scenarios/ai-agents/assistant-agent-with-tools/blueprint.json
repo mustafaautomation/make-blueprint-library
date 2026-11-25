@@ -1,0 +1,523 @@
+{
+  "name": "Assistant that picks a tool, then answers",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {},
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Catch the question"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "select": "chat",
+        "model": "gpt-4o-mini",
+        "max_tokens": "150",
+        "temperature": "0.2",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You choose one tool. Return JSON only: tool (sheets, http, or slack) and query (a short string). sheets is for policy and pricing. http is for status pages. slack is for 'tell the team'."
+          },
+          {
+            "role": "user",
+            "content": "{{1.message}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Choose a tool"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:openai-gpt-3",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "Tool choice failed.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert router"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Break",
+          "version": 1,
+          "parameters": {},
+          "mapper": {
+            "retry": true,
+            "count": 3,
+            "interval": 15
+          },
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Retry (Break)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "module": "json:ParseJSON",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "json": "{{2.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "Parse the tool choice"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "parameters": {},
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "Run the chosen tool and answer"
+        }
+      },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 7,
+              "module": "google-sheets:filterRows",
+              "version": 2,
+              "parameters": {},
+              "mapper": {
+                "from": "drive",
+                "spreadsheetId": "",
+                "sheetId": "",
+                "includesHeaders": true,
+                "tableFirstRow": "A1:Z1",
+                "valueRenderOption": "FORMATTED_VALUE",
+                "dateTimeRenderOption": "FORMATTED_STRING",
+                "limit": 3,
+                "filter": [
+                  [
+                    {
+                      "a": "A",
+                      "o": "text:contain",
+                      "b": "{{5.query}}"
+                    }
+                  ]
+                ]
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 0,
+                  "name": "Find the policy row"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:google",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Sheets tool",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.tool}}",
+                      "o": "text:equal",
+                      "b": "sheets"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 8,
+              "module": "openai-gpt-3:CreateCompletion",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "select": "chat",
+                "model": "gpt-4o-mini",
+                "max_tokens": "300",
+                "temperature": "0.2",
+                "messages": [
+                  {
+                    "role": "system",
+                    "content": "Answer using only the sheet rows. If they do not contain the answer, say you do not know. Two sentences."
+                  },
+                  {
+                    "role": "user",
+                    "content": "Question: {{1.message}}\nRows: {{7.`0`}} {{7.`1`}}"
+                  }
+                ]
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 0,
+                  "name": "Answer from the rows"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:openai-gpt-3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            },
+            {
+              "id": 9,
+              "module": "gateway:WebhookRespond",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "status": 200,
+                "body": "{{8.result}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 0,
+                  "name": "Return the sheets answer"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 10,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "parameters": {
+                "handleErrors": true
+              },
+              "mapper": {
+                "url": "https://example.com",
+                "serializeUrl": false,
+                "method": "get",
+                "headers": [
+                  {
+                    "name": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "qs": [],
+                "bodyType": "raw",
+                "parseResponse": true,
+                "contentType": "application/json",
+                "data": "",
+                "timeout": "",
+                "shareCookies": false,
+                "ca": "",
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "useQuerystring": false,
+                "gzip": true,
+                "useMtls": false,
+                "followAllRedirects": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 300,
+                  "name": "Fetch the status page"
+                }
+              },
+              "filter": {
+                "name": "HTTP tool",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.tool}}",
+                      "o": "text:equal",
+                      "b": "http"
+                    }
+                  ]
+                ]
+              },
+              "onerror": [
+                {
+                  "id": 11,
+                  "module": "slack:CreateMessage",
+                  "version": 4,
+                  "parameters": {},
+                  "mapper": {
+                    "channelWType": "list",
+                    "channelType": "public",
+                    "channel": "",
+                    "text": "Status fetch failed.",
+                    "mrkdwn": true,
+                    "parse": false
+                  },
+                  "metadata": {
+                    "designer": {
+                      "x": 1200,
+                      "y": 600,
+                      "name": "Alert fetch"
+                    },
+                    "parameters": [
+                      {
+                        "name": "__IMTCONN__",
+                        "type": "account:slack2,slack3",
+                        "label": "Connection",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": 12,
+                  "module": "builtin:Ignore",
+                  "version": 1,
+                  "parameters": {},
+                  "mapper": {},
+                  "metadata": {
+                    "designer": {
+                      "x": 1500,
+                      "y": 600,
+                      "name": "Skip (Ignore)"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": 13,
+              "module": "openai-gpt-3:CreateCompletion",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "select": "chat",
+                "model": "gpt-4o-mini",
+                "max_tokens": "300",
+                "temperature": "0.2",
+                "messages": [
+                  {
+                    "role": "system",
+                    "content": "Answer from the fetched page only. If it is not relevant, say so."
+                  },
+                  {
+                    "role": "user",
+                    "content": "Question: {{1.message}}\nPage: {{10.data}}"
+                  }
+                ]
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 300,
+                  "name": "Answer from the page"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:openai-gpt-3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            },
+            {
+              "id": 14,
+              "module": "gateway:WebhookRespond",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "status": 200,
+                "body": "{{13.result}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 300,
+                  "name": "Return the HTTP answer"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 15,
+              "module": "slack:CreateMessage",
+              "version": 4,
+              "parameters": {},
+              "mapper": {
+                "channelWType": "list",
+                "channelType": "public",
+                "channel": "",
+                "text": "*Assistant note:* {{5.query}}",
+                "mrkdwn": true,
+                "parse": false
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 600,
+                  "name": "Post the note"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:slack2,slack3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              },
+              "filter": {
+                "name": "Slack tool",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{5.tool}}",
+                      "o": "text:equal",
+                      "b": "slack"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "id": 16,
+              "module": "openai-gpt-3:CreateCompletion",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "select": "chat",
+                "model": "gpt-4o-mini",
+                "max_tokens": "80",
+                "temperature": "0.2",
+                "messages": [
+                  {
+                    "role": "system",
+                    "content": "Reply in one sentence confirming the note was posted. Do not add facts."
+                  },
+                  {
+                    "role": "user",
+                    "content": "Note: {{5.query}}"
+                  }
+                ]
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 600,
+                  "name": "Confirm what was posted"
+                },
+                "parameters": [
+                  {
+                    "name": "__IMTCONN__",
+                    "type": "account:openai-gpt-3",
+                    "label": "Connection",
+                    "required": true
+                  }
+                ]
+              }
+            },
+            {
+              "id": 17,
+              "module": "gateway:WebhookRespond",
+              "version": 1,
+              "parameters": {},
+              "mapper": {
+                "status": 200,
+                "body": "{{16.result}}"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 600,
+                  "name": "Return the confirmation"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    }
+  }
+}

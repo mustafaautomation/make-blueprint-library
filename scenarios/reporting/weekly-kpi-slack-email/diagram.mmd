@@ -1,0 +1,14 @@
+flowchart LR
+  rows(("1 · Read the included KPIs"))
+  digest(("2 · Build the digest"))
+  rows --> digest
+  story(("3 · Write the Monday note"))
+  digest --> story
+  story -->|"error"| story_alert
+  story_alert(("4 · Alert KPI"))
+  story_directive(("5 · Retry (Break)"))
+  story_alert --> story_directive
+  post(("6 · Post the note"))
+  story --> post
+  mail(("7 · Email the same note"))
+  post --> mail

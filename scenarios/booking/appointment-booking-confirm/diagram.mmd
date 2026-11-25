@@ -1,0 +1,16 @@
+flowchart LR
+  book(("1 · Catch the booking webhook"))
+  log(("2 · Log the booking event"))
+  book --> log
+  kind{"3 · Confirm or cancel"}
+  log --> kind
+  confirm_mail(("4 · Email the confirmation"))
+  confirm_sms(("5 · Text the confirmation"))
+  confirm_mail --> confirm_sms
+  host(("6 · Tell the host channel"))
+  confirm_sms --> host
+  kind -->|"Booked"| confirm_mail
+  cancel_mail(("7 · Email the cancellation"))
+  cancel_host(("8 · Tell the host it was canceled"))
+  cancel_mail --> cancel_host
+  kind -->|"Canceled"| cancel_mail

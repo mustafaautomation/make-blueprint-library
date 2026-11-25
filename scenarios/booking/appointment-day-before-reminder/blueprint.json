@@ -1,0 +1,134 @@
+{
+  "name": "Day-before appointment reminder from the sheet",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-sheets:filterRows",
+      "version": 2,
+      "parameters": {},
+      "mapper": {
+        "from": "drive",
+        "spreadsheetId": "",
+        "sheetId": "",
+        "includesHeaders": true,
+        "tableFirstRow": "A1:Z1",
+        "valueRenderOption": "FORMATTED_VALUE",
+        "dateTimeRenderOption": "FORMATTED_STRING",
+        "limit": 20,
+        "filter": [
+          [
+            {
+              "a": "A",
+              "o": "text:equal",
+              "b": "YES"
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "Find rows to send"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "twilio:SendSMS",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "to": "{{1.`2`}}",
+        "from": "YOUR_TWILIO_NUMBER",
+        "message": "Reminder: {{1.`4`}} for {{1.`1`}} at {{1.`3`}}."
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "Text the reminder"
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:twilio",
+            "label": "Connection",
+            "required": true
+          }
+        ]
+      },
+      "onerror": [
+        {
+          "id": 3,
+          "module": "slack:CreateMessage",
+          "version": 4,
+          "parameters": {},
+          "mapper": {
+            "channelWType": "list",
+            "channelType": "public",
+            "channel": "",
+            "text": "SMS failed for a reminder row.",
+            "mrkdwn": true,
+            "parse": false
+          },
+          "metadata": {
+            "designer": {
+              "x": 300,
+              "y": 300,
+              "name": "Alert SMS"
+            },
+            "parameters": [
+              {
+                "name": "__IMTCONN__",
+                "type": "account:slack2,slack3",
+                "label": "Connection",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "module": "builtin:Ignore",
+          "version": 1,
+          "parameters": {},
+          "mapper": {},
+          "metadata": {
+            "designer": {
+              "x": 600,
+              "y": 300,
+              "name": "Skip (Ignore)"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    }
+  }
+}
